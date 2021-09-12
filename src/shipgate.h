@@ -29,7 +29,7 @@
 
 /* Minimum and maximum supported protocol ship<->shipgate protocol versions */
 #define SHIPGATE_MINIMUM_PROTO_VER 12
-#define SHIPGATE_MAXIMUM_PROTO_VER 19
+#define SHIPGATE_MAXIMUM_PROTO_VER 20
 
 #ifdef PACKED
 #undef PACKED
@@ -516,6 +516,39 @@ typedef struct shipgate_ubl_add {
     uint8_t reserved[7];
 } PACKED shipgate_ubl_add_pkt;
 
+/* Packet used to check if a quest needs to be sent to the ship */
+typedef struct shipgate_qcheck {
+    shipgate_hdr_t hdr;
+    uint32_t quest_id;
+    uint32_t quest_len;
+    uint32_t quest_crc;
+    uint32_t reserved;
+} PACKED shipgate_qcheck_pkt;
+
+/* Packet used to reply to a quest check packet to request the quest */
+typedef struct shipgate_qcheck_reply {
+    shipgate_hdr_t hdr;
+    uint32_t quest_id;
+    uint32_t status;
+} PACKED shipgate_qcheck_reply_pkt;
+
+/* Packet used to send a chunk of quest data to a ship */
+typedef struct shipgate_qchunk {
+    shipgate_hdr_t hdr;
+    uint32_t quest_id;
+    uint32_t chunk_num;
+    uint32_t chunk_len;
+    uint32_t chunk_crc;
+    uint8_t data[];
+} PACKED shipgate_qchunk_pkt;
+
+/* Packet used to delete a quest */
+typedef struct shipgate_qdel {
+    shipgate_hdr_t hdr;
+    uint32_t quest_id;
+    uint32_t reserved;
+} PACKED shipgate_qdel_pkt;
+
 #undef PACKED
 
 /* The requisite message for the msg field of the shipgate_login_pkt. */
@@ -569,6 +602,9 @@ static const char shipgate_login_msg[] =
 #define SHDR_TYPE_SHIP_CTL  0x0030      /* Ship control packet */
 #define SHDR_TYPE_UBLOCKS   0x0031      /* User blocklist */
 #define SHDR_TYPE_UBL_ADD   0x0032      /* User blocklist add */
+#define SHDR_TYPE_QCHECK    0x0033      /* Quest check or reply */
+#define SHDR_TYPE_QCHUNK    0x0034      /* Quest chunk */
+#define SHDR_TYPE_QDEL      0x0035      /* Quest delete */
 
 /* Flags that can be set in the login packet */
 #define LOGIN_FLAG_GMONLY   0x00000001  /* Only Global GMs are allowed */
@@ -649,6 +685,7 @@ static const char shipgate_login_msg[] =
 /* Types for the script chunk packet. */
 #define SCHUNK_TYPE_SCRIPT      0x01
 #define SCHUNK_TYPE_MODULE      0x02
+#define SCHUNK_DELETE           0x40
 #define SCHUNK_CHECK            0x80
 
 /* Error codes for schunk */
