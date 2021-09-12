@@ -513,9 +513,12 @@ void run_server(int tsock, int tsock6) {
 #ifdef ENABLE_LUA
             if(!i->disconnected && resend_scripts) {
                 /* Send script check packets, if the ship supports scripting */
-                if(i->proto_ver >= 16 && i->flags & LOGIN_FLAG_LUA) {
+                if(i->proto_ver >= 16 && (i->flags & LOGIN_FLAG_LUA)) {
                     for(j = 0; j < script_count; ++j) {
-                        send_script_check(i, &scripts[j]);
+                        if(!scripts[j].deleted)
+                            send_script_check(i, &scripts[j]);
+                        else if(i->proto_ver >= 20)
+                            send_script_delete(i, &scripts[j]);
                     }
                 }
             }
