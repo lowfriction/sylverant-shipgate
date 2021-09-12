@@ -555,7 +555,10 @@ static int handle_shipgate_login6t(ship_t *c, shipgate_login6_reply_pkt *pkt) {
     /* Send script check packets, if the ship supports scripting */
     if(pver >= 16 && c->flags & LOGIN_FLAG_LUA) {
         for(i = 0; i < script_count; ++i) {
-            send_script_check(c, &scripts[i]);
+            if(!scripts[i].deleted)
+                send_script_check(c, &scripts[i]);
+            else
+                send_script_delete(c, &scripts[i]);
         }
     }
 #endif
