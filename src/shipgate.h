@@ -790,6 +790,9 @@ int send_simple_mail(ship_t *c, uint32_t gc, uint32_t block, uint32_t sender,
 /* Send a script check packet. */
 int send_script_check(ship_t *c, ship_script_t *scr);
 
+/* Send a script delete packet. */
+int send_script_delete(ship_t *c, ship_script_t *scr);
+
 /* Send a script to a ship. */
 int send_script(ship_t *c, ship_script_t *scr);
 

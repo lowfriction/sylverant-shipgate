@@ -662,6 +662,31 @@ int send_script_check(ship_t *c, ship_script_t *scr) {
     return send_crypt(c, sizeof(shipgate_schunk_pkt));
 }
 
+/* Send a packet to delete a script from a ship */
+int send_script_delete(ship_t *c, ship_script_t *scr) {
+    shipgate_schunk_pkt *pkt = (shipgate_schunk_pkt *)sendbuf;
+    uint8_t type = scr->module ? SCHUNK_TYPE_MODULE : SCHUNK_TYPE_SCRIPT;
+
+    /* Don't try to send these to a ship that won't know what to do with them */
+    if(c->proto_ver < 20 || !(c->flags & LOGIN_FLAG_LUA))
+        return 0;
+
+    /* Fill in the easy stuff */
+    memset(pkt, 0, sizeof(shipgate_schunk_pkt));
+    pkt->hdr.pkt_len = htons(sizeof(shipgate_schunk_pkt));
+    pkt->hdr.pkt_type = htons(SHDR_TYPE_SCHUNK);
+    pkt->chunk_type = SCHUNK_DELETE | type;
+    pkt->chunk_length = 0;
+    strncpy(pkt->filename, scr->remote_fn, 32);
+    pkt->chunk_crc = 0;
+
+    if(scr->event)
+        pkt->action = htonl(scr->event);
+
+    /* Send it away */
+    return send_crypt(c, sizeof(shipgate_schunk_pkt));
+}
+
 /* Send a packet to send a script to the a ship. */
 int send_script(ship_t *c, ship_script_t *scr) {
     shipgate_schunk_pkt *pkt = (shipgate_schunk_pkt *)sendbuf;
