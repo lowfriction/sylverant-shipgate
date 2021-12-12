@@ -502,6 +502,7 @@ int script_execute(script_action_t event, ...) {
     lua_Integer rv = 0;
     int err = 0, argtype, argcount = 0;
     va_list ap;
+    const char *errmsg;
 
     /* Can't do anything if we don't have any scripts loaded. */
     if(!scripts_ref)
@@ -596,8 +597,14 @@ int script_execute(script_action_t event, ...) {
     va_end(ap);
 
     /* Done with that, call the function. */
-    if(lua_pcall(lstate, argcount, 1, 0) != LUA_OK) {
-        debug(DBG_ERROR, "Error running Lua script for event %d\n", (int)event);
+    if((err = lua_pcall(lstate, argcount, 1, 0)) != LUA_OK) {
+        debug(DBG_ERROR, "Error running Lua script for event %d (%d)\n",
+              (int)event, err);
+
+        if((errmsg = lua_tostring(lstate, -1))) {
+            debug(DBG_ERROR, "Error message:\n%s\n", errmsg);
+        }
+
         lua_pop(lstate, 1);
         goto out;
     }
